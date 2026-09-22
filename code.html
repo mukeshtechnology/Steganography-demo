@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Caesar Cipher Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            overflow-x: auto;
+            margin: 20px auto;
+        }
+
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+        pre {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Image Steganography using LSB</h2>
+    <pre>
+<code>
+
+    function toBinary(text) {
+        return text
+            .split('')
+            .map(char => char.charCodeAt(0).toString(2).padStart(8, '0')) // Convert each char to 8-bit binary
+            .join('')
+            .split('')
+            .map(Number); // Convert each bit to a number (0 or 1)
+    }
+    
+    
+    function fromBinary(binaryArray) {
+        const binaryString = binaryArray.join('');
+        const text = binaryString.match(/.{1,8}/g) // Split binary string into 8-bit chunks
+            .map(byte => String.fromCharCode(parseInt(byte, 2))) // Convert to character
+            .join('');
+        return text;
+    }
+    
+    
+    function embedTextLength(length, pixels) {
+        const binaryLength = length.toString(2).padStart(32, '0'); // Convert length to 32-bit binary
+        for (let i = 0; i < 32; i++) {
+            pixels[i] = (pixels[i] & ~1) | Number(binaryLength[i]); // Store length in the first 32 bits
+        }
+    }
+    
+    
+    function extractTextLength(pixels) {
+        let binaryLength = '';
+        for (let i = 0; i < 32; i++) {
+            binaryLength += (pixels[i] & 1).toString(); 
+        }
+        return parseInt(binaryLength, 2); // Convert the 32-bit binary to an integer
+    }
+    
+    // Hiding text into image
+    document.getElementById('hideTextBtn').addEventListener('click', () => {
+        const fileInput = document.getElementById('fileInput').files[0];
+        const textToHide = document.getElementById('textToHide').value;
+    
+        if (!fileInput || !textToHide) {
+            alert('Please upload an image and enter the text to hide.');
+            return;
+        }
+    
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.getElementById('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+    
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+    
+                // Convert the text to binary and hide it in the least significant bit
+                const binaryText = toBinary(textToHide);
+                const textLength = binaryText.length;
+    
+                // Embed the text length in the first 32 pixels
+                embedTextLength(textLength, pixels);
+    
+                let textIndex = 0;
+                for (let i = 32; i < pixels.length && textIndex < binaryText.length; i += 4) { // Start after the first 32 pixels
+                    pixels[i] = (pixels[i] & ~1) | binaryText[textIndex++]; // Modify the red channel's LSB
+                }
+    
+                ctx.putImageData(imageData, 0, 0);
+                document.getElementById('downloadBtn').style.display = 'block';
+            };
+    
+            img.src = event.target.result;
+        };
+    
+        reader.readAsDataURL(fileInput);
+    });
+    
+    // Download the modified image
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const canvas = document.getElementById('canvas');
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'stego_image.png';
+        link.click();
+    });
+    
+    // Extract hidden text from an image
+    document.getElementById('extractTextBtn').addEventListener('click', () => {
+        const fileInput = document.getElementById('extractFileInput').files[0];
+    
+        if (!fileInput) {
+            alert('Please upload an image to extract hidden text.');
+            return;
+        }
+    
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.getElementById('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+    
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+    
+                // Extract the text length from the first 32 pixels
+                const textLength = extractTextLength(pixels);
+    
+                // Extract LSB from the red channel of each pixel after the first 32 to recover the binary text
+                let binaryArray = [];
+                for (let i = 32, j = 0; i < pixels.length && j < textLength; i += 4, j++) {
+                    binaryArray.push(pixels[i] & 1); // Get the LSB of the red channel
+                }
+    
+                const hiddenText = fromBinary(binaryArray);
+                document.getElementById('extractedText').value = hiddenText;
+            };
+    
+            img.src = event.target.result;
+        };
+    
+        reader.readAsDataURL(fileInput);
+    });
+    
+</code>
+    </pre>
+</div>
+
+</body>
+</html>
