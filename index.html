@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Steganography (LSB)</title>  
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Image Steganography using LSB</h2>
+
+        <!-- Section for hiding text in the image -->
+        <div>
+            <label for="fileInput">Upload an Image to Hide Text:</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div>
+            <label for="textToHide">Text to Hide:</label>
+            <textarea id="textToHide" rows="4" placeholder="Enter the text you want to hide"></textarea>
+        </div>
+
+        <button id="hideTextBtn">Hide Text in Image</button>
+        <button id="downloadBtn" style="display:none;">Download Image with Hidden Text</button>
+
+        <!-- Section for extracting hidden text from an image -->
+        <h3>Extract Hidden Text from Image</h3>
+        <div>
+            <label for="extractFileInput">Upload Image with Hidden Text:</label>
+            <input type="file" id="extractFileInput" accept="image/*">
+        </div>
+
+        <button id="extractTextBtn">Extract Text</button>
+
+        <div class="result">
+            <label for="extractedText">Extracted Text:</label>
+            <textarea id="extractedText" rows="4" readonly></textarea>
+        </div>
+
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+    <a href="07_Steganography_Share_Code_.html" class="custom-button" target="_blank">Go to view code</a>
+
+    <script src="script.js"></script>
+</body>
+</html>
